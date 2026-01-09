@@ -25,8 +25,10 @@ description: Complete Agency SOP - Professional workflow for building production
 7. [Phase 6: Testing & Quality Assurance](#phase-6-testing--quality-assurance)
 8. [Phase 7: Deployment Pipeline](#phase-7-deployment-pipeline)
 9. [Phase 8: Monitoring & Maintenance](#phase-8-monitoring--maintenance)
-10. [Documentation Standards](#documentation-standards)
-11. [Emergency Protocols](#emergency-protocols)
+10. [Advanced Patterns](#advanced-patterns)
+11. [Documentation Standards](#documentation-standards)
+12. [Emergency Protocols](#emergency-protocols)
+13. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -917,6 +919,51 @@ Create `docs/architecture/DATABASE_SCHEMA.md`:
 |            |             |          |           |           |
 ```
 
+### 1.5 Database Seeding Strategy ⭐ _Critical for Development_
+
+> **Problem:** Every `supabase db reset` loses all test data. Developers waste time recreating it.
+> **Solution:** Create `seed.sql` that runs automatically on database reset.
+
+Create `supabase/seed.sql`:
+
+```sql
+-- ============================================
+-- SEED DATA FOR LOCAL DEVELOPMENT
+-- ============================================
+-- This file runs automatically with `supabase db reset`
+
+-- Test Users (use with Supabase Auth test accounts)
+-- Note: These IDs should match test auth.users you create
+INSERT INTO public.users_profile (id, email, display_name, role, created_at) VALUES
+  ('11111111-1111-1111-1111-111111111111', 'admin@test.com', 'Admin User', 'admin', NOW()),
+  ('22222222-2222-2222-2222-222222222222', 'user@test.com', 'Test User', 'user', NOW()),
+  ('33333333-3333-3333-3333-333333333333', 'moderator@test.com', 'Mod User', 'moderator', NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Sample Products (example)
+-- INSERT INTO public.products (name, price, category) VALUES
+--   ('Product A', 29.99, 'electronics'),
+--   ('Product B', 49.99, 'clothing'),
+--   ('Product C', 19.99, 'books');
+
+-- Add more seed data as needed for your specific project
+```
+
+**How it works:**
+
+```bash
+# Reset database AND run seed.sql automatically
+npx supabase db reset
+
+# Seed runs after migrations, populating fresh data
+```
+
+**Benefits:**
+
+- **Consistent test data** across all developers
+- **Instant data** after any database reset
+- **Version controlled** seed data in Git
+
 ---
 
 ## Phase 2: Supabase Setup & Security
@@ -1006,6 +1053,166 @@ npx supabase gen types typescript --project-id your-project-ref > src/types/supa
 
 **CRITICAL:** Re-run this command after EVERY migration!
 
+### 2.6 Next.js Middleware (Route Protection) ⭐ _Critical for Auth_
+
+> **Problem:** Client-side auth checks cause "flash" - user sees protected page before redirect.
+> **Solution:** Middleware intercepts requests BEFORE page loads.
+
+Create `src/middleware.ts`:
+
+```typescript
+// src/middleware.ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+// Routes that require authentication
+const protectedRoutes = ["/dashboard", "/admin", "/settings", "/profile"];
+
+// Routes that should redirect to dashboard if already authenticated
+const authRoutes = ["/login", "/signup", "/forgot-password"];
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const path = request.nextUrl.pathname;
+
+  // Protect dashboard routes
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    path.startsWith(route)
+  );
+  if (isProtectedRoute && !user) {
+    const redirectUrl = new URL("/login", request.url);
+    redirectUrl.searchParams.set("redirectTo", path);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Redirect logged-in users away from auth pages
+  const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
+  if (isAuthRoute && user) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|public).*)"],
+};
+```
+
+**Benefits:**
+
+- ✅ No "flash" - redirect happens before page renders
+- ✅ Centralized auth logic - one place to manage
+- ✅ Works with Server Components
+
+### 2.7 Supabase Storage (File Uploads) ⭐ _For Media Handling_
+
+> **When needed:** User avatars, product images, document uploads
+
+**Storage Bucket Setup (via Migration):**
+
+```sql
+-- supabase/migrations/00003_storage_buckets.sql
+
+-- Create avatars bucket
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true);
+
+-- Create documents bucket (private)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('documents', 'documents', false);
+
+-- RLS for avatars: anyone can view, only owner can upload
+CREATE POLICY "Avatar images are publicly accessible"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'avatars'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+
+-- RLS for documents: only owner can access
+CREATE POLICY "Users can access own documents"
+ON storage.objects FOR ALL
+USING (
+  bucket_id = 'documents'
+  AND auth.uid()::text = (storage.foldername(name))[1]
+);
+```
+
+**Upload Service:**
+
+```typescript
+// src/lib/services/storage.service.ts
+import { createClient } from "@/lib/supabase/client";
+
+export const StorageService = {
+  async uploadAvatar(userId: string, file: File) {
+    const supabase = createClient();
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${userId}/avatar.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from("avatars")
+      .upload(fileName, file, { upsert: true });
+
+    if (error) throw error;
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+    return publicUrl;
+  },
+
+  async deleteAvatar(userId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.storage
+      .from("avatars")
+      .remove([`${userId}/avatar`]);
+
+    if (error) throw error;
+  },
+};
+```
+
 ---
 
 ## Phase 3: Frontend Foundation
@@ -1035,6 +1242,58 @@ npm install @supabase/supabase-js @supabase/ssr
 # Install development tools
 npm install -D @types/node typescript eslint prettier
 ```
+
+### 3.1.1 Environment Validation ⭐ _Critical for Production_
+
+> **Problem:** Missing environment variables cause silent crashes in production.
+> **Solution:** Validate ALL required env vars at build time.
+
+Create `src/env.ts`:
+
+```typescript
+// src/env.ts
+import { z } from "zod";
+
+const envSchema = z.object({
+  // Public (exposed to browser)
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url("Invalid Supabase URL"),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, "Anon key required"),
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
+  // Private (server only)
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "Service role key required"),
+});
+
+// Validate at build time
+export const env = envSchema.parse({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+});
+
+// Type-safe access
+export type Env = z.infer<typeof envSchema>;
+```
+
+**Usage:**
+
+```typescript
+// Instead of: process.env.NEXT_PUBLIC_SUPABASE_URL!
+// Use: env.NEXT_PUBLIC_SUPABASE_URL (fully typed, validated)
+
+import { env } from "@/env";
+
+const supabase = createClient(
+  env.NEXT_PUBLIC_SUPABASE_URL,
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+```
+
+**Benefits:**
+
+- ❌ Missing vars → Build FAILS with clear error message
+- ✅ All vars present → Build succeeds, app runs safely
 
 ### 3.2 Folder Structure (NO DUPLICATION)
 
@@ -1083,8 +1342,41 @@ src/
 
 ```bash
 # Install recommended libraries
-npm install @tanstack/react-query zod react-hook-form
+npm install @tanstack/react-query zod react-hook-form zustand
 npx shadcn-ui@latest init
+```
+
+#### State Management Clarity ⭐ _Critical Rule_
+
+> **"Which tool for which state?"** - The most common source of confusion.
+
+| State Type          | Tool            | Examples                         | Where It Lives                 |
+| ------------------- | --------------- | -------------------------------- | ------------------------------ |
+| **Server State**    | TanStack Query  | Users, Products, Orders from DB  | Cache, refetched automatically |
+| **Client UI State** | Zustand         | Sidebar open, Theme, Modal state | Memory, persisted optionally   |
+| **Form State**      | React Hook Form | Input values, validation errors  | Local to form component        |
+| **URL State**       | Next.js Router  | Page, filters, search params     | URL (shareable)                |
+
+**⚠️ VIOLATIONS:**
+
+- ❌ Do NOT put server data in Zustand → causes stale data
+- ❌ Do NOT fetch data in useEffect → use useQuery
+- ❌ Do NOT store fetched data in useState → use useQuery cache
+
+**✅ CORRECT Pattern:**
+
+```typescript
+// Server State → TanStack Query
+const { data: products } = useQuery({
+  queryKey: ["products"],
+  queryFn: fetchProducts,
+});
+
+// UI State → Zustand
+const { sidebarOpen, toggleSidebar } = useSidebarStore();
+
+// Form State → React Hook Form
+const { register, handleSubmit } = useForm<ProductForm>();
 ```
 
 ### 3.4 Code Reuse Principles
@@ -1259,6 +1551,169 @@ export function CourseList() {
 - **Zero Duplication:** Use `useCourses()` anywhere, data fetched once
 - **Auto-Caching:** TanStack Query handles it
 - **Easy Testing:** Mock the service, test the hook, test the component separately
+
+### 3.5.1 UI State Components ⭐ _Required Templates_
+
+> Every data-fetching component needs these three states: Loading, Error, Empty.
+
+**Skeleton (Loading State):**
+
+```typescript
+// src/components/ui/Skeleton.tsx
+export function Skeleton({ className }: { className?: string }) {
+  return (
+    <div
+      className={`animate-pulse bg-gray-200 rounded ${
+        className || "h-4 w-full"
+      }`}
+    />
+  );
+}
+
+// Usage variations
+export function CardSkeleton() {
+  return (
+    <div className="border rounded-lg p-4 space-y-3">
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="h-4 w-1/2" />
+    </div>
+  );
+}
+```
+
+**Error Message:**
+
+```typescript
+// src/components/ui/ErrorMessage.tsx
+import { AlertCircle } from "lucide-react";
+
+interface ErrorMessageProps {
+  error: Error | null;
+  retry?: () => void;
+}
+
+export function ErrorMessage({ error, retry }: ErrorMessageProps) {
+  return (
+    <div className="flex flex-col items-center justify-center p-8 text-center">
+      <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+      <h3 className="text-lg font-semibold">Something went wrong</h3>
+      <p className="text-gray-600 mt-2">{error?.message || "Unknown error"}</p>
+      {retry && (
+        <button
+          onClick={retry}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+**Empty State:**
+
+```typescript
+// src/components/ui/EmptyState.tsx
+import { Inbox } from "lucide-react";
+
+interface EmptyStateProps {
+  title: string;
+  description?: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}
+
+export function EmptyState({ title, description, action }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center p-12 text-center">
+      <Inbox className="h-16 w-16 text-gray-400 mb-4" />
+      <h3 className="text-lg font-semibold">{title}</h3>
+      {description && <p className="text-gray-600 mt-2">{description}</p>}
+      {action && (
+        <button
+          onClick={action.onClick}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          {action.label}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+**Error Boundary (React):**
+
+```typescript
+// src/components/ui/ErrorBoundary.tsx
+"use client";
+
+import { Component, ErrorInfo, ReactNode } from "react";
+import { ErrorMessage } from "./ErrorMessage";
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error: Error | null;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error("ErrorBoundary caught:", error, errorInfo);
+    // Optional: Send to Sentry
+    // Sentry.captureException(error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        this.props.fallback || (
+          <ErrorMessage
+            error={this.state.error}
+            retry={() => this.setState({ hasError: false, error: null })}
+          />
+        )
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+**Usage in Layout:**
+
+```typescript
+// src/app/layout.tsx
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </body>
+    </html>
+  );
+}
+```
 
 ### 3.6 Supabase Client Setup
 
@@ -1819,6 +2274,262 @@ npx supabase db dump --project-ref $PROJECT_ID > backups/backup-$(date +%Y%m%d).
 
 ---
 
+## Advanced Patterns
+
+### System Architecture Diagram (Mermaid)
+
+```mermaid
+flowchart TB
+    subgraph Client["🌐 Client (Browser)"]
+        UI["React Components"]
+        TQ["TanStack Query Cache"]
+        ZU["Zustand Store"]
+    end
+
+    subgraph Vercel["☁️ Vercel Edge"]
+        NX["Next.js App Router"]
+        MW["Middleware"]
+        API["API Routes"]
+    end
+
+    subgraph Supabase["🔋 Supabase"]
+        AUTH["Auth Service"]
+        DB["PostgreSQL + RLS"]
+        RT["Realtime"]
+        STORE["Storage Buckets"]
+        EF["Edge Functions"]
+    end
+
+    UI --> TQ
+    UI --> ZU
+    TQ --> NX
+    NX --> MW
+    MW --> AUTH
+    API --> EF
+    NX --> DB
+    DB --> RT
+    RT --> TQ
+    NX --> STORE
+```
+
+### Git Branch Strategy (Mermaid)
+
+```mermaid
+gitGraph
+    commit id: "initial"
+    branch develop
+    checkout develop
+    commit id: "setup"
+    branch feature/auth
+    checkout feature/auth
+    commit id: "login"
+    commit id: "signup"
+    checkout develop
+    merge feature/auth
+    branch feature/products
+    checkout feature/products
+    commit id: "list"
+    commit id: "crud"
+    checkout develop
+    merge feature/products
+    checkout main
+    merge develop tag: "v1.0.0"
+    branch hotfix/bug
+    checkout hotfix/bug
+    commit id: "fix"
+    checkout main
+    merge hotfix/bug tag: "v1.0.1"
+```
+
+### Realtime Subscriptions Pattern ⭐ _For Live Updates_
+
+> **When needed:** Chat, notifications, live dashboards, collaborative editing
+
+```typescript
+// src/hooks/useRealtimeOrders.ts
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
+
+export function useRealtimeOrders() {
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("orders-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*", // INSERT, UPDATE, DELETE
+          schema: "public",
+          table: "orders",
+        },
+        (payload) => {
+          // Invalidate and refetch orders query
+          queryClient.invalidateQueries({ queryKey: ["orders"] });
+
+          // Or update cache directly for better UX
+          if (payload.eventType === "INSERT") {
+            queryClient.setQueryData(["orders"], (old: Order[]) => [
+              payload.new as Order,
+              ...(old || []),
+            ]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, supabase]);
+}
+
+// Usage in component
+export function OrdersDashboard() {
+  const { data: orders } = useOrders();
+  useRealtimeOrders(); // Enables live updates
+
+  return <OrderList orders={orders} />;
+}
+```
+
+### Pagination Pattern ⭐ _Critical for 100K+ Users_
+
+> **Rule:** NEVER fetch all records. Always paginate.
+
+**Cursor-Based Pagination (Preferred):**
+
+```typescript
+// src/lib/services/products.service.ts
+export const ProductsService = {
+  async getPage(cursor?: string, limit = 20) {
+    const supabase = createClient();
+
+    let query = supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (cursor) {
+      query = query.lt("created_at", cursor);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return {
+      data,
+      nextCursor:
+        data.length === limit ? data[data.length - 1].created_at : null,
+    };
+  },
+};
+
+// src/hooks/useProducts.ts
+import { useInfiniteQuery } from "@tanstack/react-query";
+
+export function useProductsInfinite() {
+  return useInfiniteQuery({
+    queryKey: ["products", "infinite"],
+    queryFn: ({ pageParam }) => ProductsService.getPage(pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+}
+
+// Usage in component
+export function ProductList() {
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useProductsInfinite();
+
+  const products = data?.pages.flatMap((page) => page.data) ?? [];
+
+  return (
+    <>
+      <div className="grid grid-cols-3 gap-4">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+      {hasNextPage && (
+        <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+          {isFetchingNextPage ? "Loading..." : "Load More"}
+        </button>
+      )}
+    </>
+  );
+}
+```
+
+### Optimistic Updates Pattern ⭐ _For Instant UX_
+
+> **Purpose:** UI updates immediately, then syncs with server.
+
+```typescript
+// src/hooks/useUpdateProduct.ts
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ProductsService } from "@/lib/services/products.service";
+import type { Product, ProductUpdate } from "@/types";
+
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ProductUpdate }) =>
+      ProductsService.update(id, data),
+
+    // Optimistic update
+    onMutate: async ({ id, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["products", id] });
+
+      // Snapshot previous value
+      const previousProduct = queryClient.getQueryData<Product>([
+        "products",
+        id,
+      ]);
+
+      // Optimistically update
+      queryClient.setQueryData<Product>(["products", id], (old) => ({
+        ...old!,
+        ...data,
+      }));
+
+      // Return context for rollback
+      return { previousProduct };
+    },
+
+    // Rollback on error
+    onError: (err, variables, context) => {
+      if (context?.previousProduct) {
+        queryClient.setQueryData(
+          ["products", variables.id],
+          context.previousProduct
+        );
+      }
+    },
+
+    // Always refetch after success or error
+    onSettled: (data, error, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["products", variables.id] });
+    },
+  });
+}
+
+// Usage
+const updateProduct = useUpdateProduct();
+
+const handleSave = (data: ProductUpdate) => {
+  updateProduct.mutate({ id: product.id, data });
+  // UI updates instantly, no loading state needed!
+};
+```
+
+---
+
 ## Documentation Standards
 
 ### Auto-Generated Documentation with TypeDoc ⭐ _From Gemini_
@@ -2072,12 +2783,13 @@ Then copy the contents of that file into the prompt.
 
 ## Version History
 
-| Version | Date       | Changes                                                                           |
-| ------- | ---------- | --------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-01-09 | Initial SOP release                                                               |
-| 1.1.0   | 2026-01-09 | Merged Gemini 3 Pro best practices (PRD, Triggers, Sentry, etc)                   |
-| 1.2.0   | 2026-01-09 | Added Visual Planning, GUI Ban, Atomic Check, 3-Layer Architecture, Master Prompt |
-| 1.3.0   | 2026-01-09 | Created companion AI_INSTRUCTIONS.md (The Enforcer) for direct AI session use     |
+| Version | Date       | Changes                                                                                                                                                                                                                                                                    |
+| ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-01-09 | Initial SOP release                                                                                                                                                                                                                                                        |
+| 1.1.0   | 2026-01-09 | Merged Gemini 3 Pro best practices (PRD, Triggers, Sentry, etc)                                                                                                                                                                                                            |
+| 1.2.0   | 2026-01-09 | Added Visual Planning, GUI Ban, Atomic Check, 3-Layer Architecture, Master Prompt                                                                                                                                                                                          |
+| 1.3.0   | 2026-01-09 | Created companion AI_INSTRUCTIONS.md (The Enforcer) for direct AI session use                                                                                                                                                                                              |
+| 1.4.0   | 2026-01-09 | **Major Update:** Added 14 critical sections - Env Validation, Seeding, Middleware, Storage, State Clarity, UI Components (Skeleton, ErrorMessage, EmptyState, ErrorBoundary), Advanced Patterns (Realtime, Pagination, Optimistic Updates), Mermaid diagrams, Updated TOC |
 
 ---
 

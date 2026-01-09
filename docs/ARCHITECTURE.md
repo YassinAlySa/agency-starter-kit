@@ -1392,6 +1392,10 @@ Create `next.config.js` with security headers:
 // next.config.js
 const securityHeaders = [
   {
+    key: "X-DNS-Prefetch-Control",
+    value: "on", // Enables DNS prefetching for performance
+  },
+  {
     key: "X-Frame-Options",
     value: "DENY", // Prevents clickjacking
   },
@@ -1405,12 +1409,12 @@ const securityHeaders = [
   },
   {
     key: "Strict-Transport-Security",
-    value: "max-age=31536000; includeSubDomains; preload", // HSTS - forces HTTPS
+    value: "max-age=63072000; includeSubDomains; preload", // HSTS - 2 years
   },
   {
     key: "Content-Security-Policy",
     value:
-      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self';",
   },
   {
     key: "Referrer-Policy",
@@ -1418,27 +1422,56 @@ const securityHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "geolocation=(), microphone=(), camera=()", // Disable dangerous APIs
+    value: "camera=(), microphone=(), geolocation=(), interest-cohort=()", // Block FLoC
   },
 ];
 
 module.exports = {
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
 };
 ```
 
-**Header Checklist:**
+**⚡ CSP with Nonce (For Inline Scripts):**
+
+```typescript
+// middleware.ts - Generate nonce for CSP
+import { NextResponse } from "next/server";
+import crypto from "crypto";
+
+export function middleware(request: NextRequest) {
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'nonce-${nonce}';
+    style-src 'self' 'unsafe-inline';
+    object-src 'none';
+    base-uri 'self';
+  `
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  const response = NextResponse.next();
+  response.headers.set("Content-Security-Policy", cspHeader);
+  response.headers.set("x-nonce", nonce); // Pass to components
+
+  return response;
+}
+```
+
+**Header Checklist (Complete):**
 
 | Header                            | Prevents          | Risk if Missing |
 | --------------------------------- | ----------------- | --------------- |
+| `X-DNS-Prefetch-Control`          | DNS leakage       | 🟢 Low          |
 | `X-Frame-Options: DENY`           | Clickjacking      | 🔴 Critical     |
 | `X-Content-Type-Options: nosniff` | MIME confusion    | 🟡 High         |
 | `Strict-Transport-Security`       | Man-in-the-Middle | 🔴 Critical     |
 | `Content-Security-Policy`         | XSS, injection    | 🔴 Critical     |
 | `Referrer-Policy`                 | Info leakage      | 🟡 Medium       |
-| `Permissions-Policy`              | API abuse         | 🟡 Medium       |
+| `Permissions-Policy`              | API abuse, FLoC   | 🟡 Medium       |
 
 ### 3.1.3 Cookie Security ⭐ _Session Hijacking Prevention_
 
@@ -1467,6 +1500,33 @@ response.cookies.set("session", token, cookieOptions);
 | `sameSite` | CSRF protection  | `strict` or `lax`     |
 | `path`     | Scope limitation | `/` or specific path  |
 | `maxAge`   | Expiration       | As short as practical |
+
+**🔐 Cookie Prefixing (Extra Security):**
+
+```typescript
+// Use __Host- prefix for maximum security
+// Browser rejects if: not HTTPS, not from current host, has domain/path set
+response.cookies.set("__Host-SessionToken", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  path: "/",
+});
+
+// __Secure- prefix (less strict, allows subdomain)
+response.cookies.set("__Secure-Token", token, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "lax",
+});
+```
+
+> **Why `__Host-`?** The browser REJECTS the cookie if:
+>
+> - Not sent over HTTPS
+> - Has a `Domain` attribute
+> - Has a `Path` other than `/`
+>   This prevents cookie injection attacks!
 
 **⚠️ FORBIDDEN:**
 
@@ -3157,6 +3217,229 @@ if (!resolvedPath.startsWith("/uploads/")) {
 }
 ```
 
+### Replay Attack Prevention ⭐ _Iron Dome Addition_
+
+> **Attack:** Hacker captures a valid request (e.g., money transfer) and replays it 100 times.
+> **Solution:** Each sensitive request must include a timestamp + nonce (one-time number).
+
+```typescript
+// src/lib/security/replay-prevention.ts
+import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
+
+interface SecureRequest {
+  timestamp: number;
+  nonce: string;
+  payload: unknown;
+  signature: string;
+}
+
+const NONCE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
+export async function validateSecureRequest(
+  req: SecureRequest
+): Promise<boolean> {
+  const supabase = createClient();
+
+  // 1. Check timestamp is recent (prevent old replays)
+  const now = Date.now();
+  if (Math.abs(now - req.timestamp) > NONCE_EXPIRY_MS) {
+    throw new Error("Request expired. Possible replay attack.");
+  }
+
+  // 2. Check nonce hasn't been used before
+  const { data: existingNonce } = await supabase
+    .from("used_nonces")
+    .select("nonce")
+    .eq("nonce", req.nonce)
+    .single();
+
+  if (existingNonce) {
+    throw new Error("Nonce already used. Replay attack detected!");
+  }
+
+  // 3. Store nonce to prevent reuse
+  await supabase.from("used_nonces").insert({
+    nonce: req.nonce,
+    used_at: new Date().toISOString(),
+  });
+
+  // 4. Verify signature (HMAC)
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.REQUEST_SECRET!)
+    .update(`${req.timestamp}:${req.nonce}:${JSON.stringify(req.payload)}`)
+    .digest("hex");
+
+  if (req.signature !== expectedSignature) {
+    throw new Error("Invalid signature.");
+  }
+
+  return true;
+}
+```
+
+**Database Table for Nonces:**
+
+```sql
+-- supabase/migrations/00004_nonce_table.sql
+CREATE TABLE used_nonces (
+  nonce TEXT PRIMARY KEY,
+  used_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Auto-cleanup old nonces
+CREATE INDEX idx_nonces_used_at ON used_nonces(used_at);
+-- Run cleanup job: DELETE FROM used_nonces WHERE used_at < NOW() - INTERVAL '1 hour';
+```
+
+### Race Conditions Prevention ⭐ _Iron Dome Addition_
+
+> **Attack:** Two users buy the "last item" simultaneously. Both succeed. You sold 2 items when you had 1.
+> **Solution:** Database transactions with row-level locking.
+
+```typescript
+// src/lib/services/inventory.service.ts
+import { createClient } from "@/lib/supabase/server";
+
+export async function purchaseItem(
+  userId: string,
+  itemId: string,
+  quantity: number
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+
+  // Use a database function with transaction
+  const { data, error } = await supabase.rpc("purchase_item_atomic", {
+    p_user_id: userId,
+    p_item_id: itemId,
+    p_quantity: quantity,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+}
+```
+
+**Atomic Purchase Function (SQL):**
+
+```sql
+-- supabase/migrations/00005_atomic_purchase.sql
+CREATE OR REPLACE FUNCTION purchase_item_atomic(
+  p_user_id UUID,
+  p_item_id UUID,
+  p_quantity INT
+) RETURNS BOOLEAN AS $$
+DECLARE
+  v_current_stock INT;
+BEGIN
+  -- Lock the row for update (prevents race condition)
+  SELECT stock INTO v_current_stock
+  FROM products
+  WHERE id = p_item_id
+  FOR UPDATE;
+
+  -- Check if enough stock
+  IF v_current_stock < p_quantity THEN
+    RAISE EXCEPTION 'Insufficient stock';
+  END IF;
+
+  -- Deduct stock
+  UPDATE products
+  SET stock = stock - p_quantity
+  WHERE id = p_item_id;
+
+  -- Create order
+  INSERT INTO orders (user_id, product_id, quantity)
+  VALUES (p_user_id, p_item_id, p_quantity);
+
+  RETURN TRUE;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Key Takeaways:**
+
+- ✅ `FOR UPDATE` locks the row until transaction completes
+- ✅ Other transactions wait for the lock
+- ✅ Prevents double-selling inventory
+- ✅ Use for: balances, inventory, seats, reservations
+
+### Second-Order SQL Injection ⭐ _Iron Dome Addition_
+
+> **Attack:** User enters `' OR 1=1 --` as their name. It's stored safely (parameterized).
+> Later, an admin report uses this name in a raw query → BOOM, SQL injection.
+
+**The Problem:**
+
+```typescript
+// User registration (SAFE - parameterized)
+await supabase.from("users").insert({ name: userInput }); // ✅ Safe storage
+
+// Later, admin report (VULNERABLE)
+const report = await supabase.rpc("generate_report", {
+  sql: `SELECT * FROM orders WHERE user_name = '${userData.name}'`, // ❌ Uses stored malicious data
+});
+```
+
+**The Solution:**
+
+```typescript
+// ALWAYS treat data FROM the database as potentially dangerous
+// Use parameterized queries for ALL operations, even with "trusted" data
+const { data } = await supabase
+  .from("orders")
+  .select("*")
+  .eq("user_name", userData.name); // ✅ Still parameterized
+```
+
+**Rule:** **Data coming FROM the database is NOT automatically safe.** If it originated from user input, treat it with suspicion when using it in new queries/contexts.
+
+### ESLint Security Rules ⭐ _Iron Dome Addition_
+
+> **Prevent human error at the code level.**
+
+**Install Security Plugins:**
+
+```bash
+npm install -D eslint-plugin-security eslint-plugin-no-unsanitized
+```
+
+**ESLint Configuration:**
+
+```javascript
+// .eslintrc.js
+module.exports = {
+  plugins: ["security", "no-unsanitized"],
+  extends: ["plugin:security/recommended"],
+  rules: {
+    // Ban dangerous functions
+    "no-eval": "error",
+    "no-new-func": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-child-process": "error",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-object-injection": "warn",
+
+    // Ban innerHTML without sanitization
+    "no-unsanitized/method": "error",
+    "no-unsanitized/property": "error",
+  },
+};
+```
+
+**What This Catches:**
+| Rule | Catches | Severity |
+|------|---------|----------|
+| `no-eval` | `eval(userInput)` | 🔴 Error |
+| `no-new-func` | `new Function(userInput)` | 🔴 Error |
+| `detect-child-process` | `exec(cmd)` | 🔴 Error |
+| `detect-object-injection` | `obj[userInput]` | 🟡 Warn |
+| `no-unsanitized/property` | `el.innerHTML = userInput` | 🔴 Error |
+
 ---
 
 ## Documentation Standards
@@ -3420,6 +3703,7 @@ Then copy the contents of that file into the prompt.
 | 1.3.0   | 2026-01-09 | Created companion AI_INSTRUCTIONS.md (The Enforcer) for direct AI session use                                                                                                                                                                                                             |
 | 1.4.0   | 2026-01-09 | **Major Update:** Added 14 critical sections - Env Validation, Seeding, Middleware, Storage, State Clarity, UI Components (Skeleton, ErrorMessage, EmptyState, ErrorBoundary), Advanced Patterns (Realtime, Pagination, Optimistic Updates), Mermaid diagrams, Updated TOC                |
 | 1.5.0   | 2026-01-09 | **🔐 ENTERPRISE SECURITY:** Security-First Manifesto (Zero Trust), Security Headers, Cookie Security, Output Encoding, Phase 9 Pen Testing (OWASP Top 10, Security Gate), Security Deep Dives (SQL Injection, SSRF, Command Injection, Deserialization, File Upload, Directory Traversal) |
+| 1.6.0   | 2026-01-10 | **🛡️ IRON DOME:** CSP with Nonce, Cookie \_\_Host- Prefix, X-DNS-Prefetch, interest-cohort (FLoC), Replay Attack Prevention, Race Conditions (FOR UPDATE), Second-Order SQLi, ESLint Security Rules. Updated ai-rules.md with Iron Dome Protocol                                          |
 
 ---
 

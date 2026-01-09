@@ -92,3 +92,57 @@ Page/Component → useQuery Hook (TanStack) → Service Layer → Supabase Clien
 
 Always read `src/types/supabase.ts` before answering.
 Do not hallucinate fields not present in this file.
+
+---
+
+## 10. 🛡️ The IRON DOME Security Protocol (Zero Tolerance)
+
+> **Mindset:** You are a Forensic Security Engineer. Paranoia is a feature, not a bug.
+
+### 10.1 Input/Output Hardening
+
+- **Deserialization:** NEVER use `eval()` or `new Function()`. Use `JSON.parse()` only after Zod validation.
+- **Path Traversal:** ALWAYS use `path.basename()` to strip `../` from user-provided paths.
+- **SSRF:** When code fetches URLs, you MUST block `localhost`, `127.0.0.1`, `169.254.169.254`, and private IP ranges.
+- **Output Encoding:** ALL user-generated content must be escaped before rendering.
+- **dangerouslySetInnerHTML:** IT IS BANNED. If absolutely required, use DOMPurify first.
+
+### 10.2 File Uploads
+
+- **Magic Bytes:** Do NOT trust file extensions. Read and verify the first 4 bytes (Hex signature).
+- **Renaming:** ALWAYS rename uploads to UUIDs. Never keep original filenames.
+- **Storage:** Store uploads OUTSIDE the webroot.
+
+### 10.3 Headers & Cookies
+
+- Ensure `Secure`, `HttpOnly`, and `SameSite=Strict` are on ALL cookies.
+- Use `__Host-` prefix for sensitive session cookies.
+- Verify `HSTS`, `CSP`, and `X-Frame-Options` headers are configured.
+
+### 10.4 Database Security
+
+- **Parameterized Queries:** ALWAYS use Supabase SDK methods (`.eq()`, `.insert()`), NEVER raw SQL strings.
+- **Second-Order SQLi:** Data FROM the database is NOT automatically safe. Treat it as user input.
+- **Race Conditions:** For inventory/balance operations, use `FOR UPDATE` locking via RPC functions.
+
+### 10.5 Banned Functions (ESLint Enforced)
+
+| Function         | Danger | Alternative                |
+| ---------------- | ------ | -------------------------- |
+| `eval()`         | RCE    | JSON.parse() + Zod         |
+| `new Function()` | RCE    | Pure functions             |
+| `exec()`         | RCE    | execFile() with array args |
+| `innerHTML =`    | XSS    | textContent or DOMPurify   |
+
+### 10.6 Advanced Threats
+
+- **Replay Attacks:** For financial operations, implement timestamp + nonce validation.
+- **Timing Attacks:** Use constant-time comparison for secrets: `crypto.timingSafeEqual()`.
+- **Clickjacking:** Ensure `X-Frame-Options: DENY` is set.
+
+### 10.7 When Creating Security-Sensitive Code
+
+1. Check existing patterns in `docs/ARCHITECTURE.md` → "Security Deep Dives"
+2. Follow the three-layer architecture (Service → Hook → UI)
+3. Add Zod validation for ALL user inputs
+4. Log security events but NEVER log secrets/PII

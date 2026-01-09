@@ -34,10 +34,6 @@ description: Complete Agency SOP - Professional workflow for building production
 
 ### 0.1 Requirements Gathering Checklist
 
-```markdown
-// turbo-all
-```
-
 - [ ] **Product Requirements Document (PRD.md)** ⭐ _From Gemini_
 
   - Product vision and objectives
@@ -433,14 +429,27 @@ npx supabase gen types typescript --project-id your-project-ref > src/types/supa
 
 ## Phase 3: Frontend Foundation
 
-### 3.1 Project Setup
+### 3.1 Template Setup (For Cloned Projects)
+
+> ⚠️ **IMPORTANT:** If you cloned this template, the project structure already exists!
+> Do NOT run `create-next-app` again - it will create nested folders.
+
+```bash
+# For CLONED template: Just install dependencies
+npm install
+
+# Verify environment matches template structure
+npm run dev
+```
+
+**For NEW projects from scratch (not using template):**
 
 ```bash
 # Create Next.js project with TypeScript
 npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir
 
 # Install Supabase client
-npm install @supabase/supabase-js @supabase/auth-helpers-nextjs
+npm install @supabase/supabase-js @supabase/ssr
 
 # Install development tools
 npm install -D @types/node typescript eslint prettier
@@ -547,6 +556,17 @@ function UserCardContainer({ userId }: { userId: string }) {
 - Easy to test (just pass props)
 - AI can generate components with 100% accuracy because shape is known
 
+**Rule 4: Barrel Exports**
+
+```typescript
+// components/ui/index.ts
+export { Button } from "./Button";
+export { Input } from "./Input";
+export { Card } from "./Card";
+
+// Usage: import { Button, Input } from "@/components/ui";
+```
+
 **Rule 5: Atomic Component Check** ⭐ _From Earlier Conversation_
 
 > Before creating ANY new component, **search for existing ones first.**
@@ -567,7 +587,7 @@ If it does, refactor it to be reusable instead of duplicating."
 
 ...and you'll drown in duplication.
 
-### 3.6 Three-Layer Architecture ⭐ _From Earlier Conversation_
+### 3.5 Three-Layer Architecture ⭐ _From Earlier Conversation_
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -659,7 +679,7 @@ export function CourseList() {
 - **Auto-Caching:** TanStack Query handles it
 - **Easy Testing:** Mock the service, test the hook, test the component separately
 
-### 3.7 Supabase Client Setup
+### 3.6 Supabase Client Setup
 
 ```typescript
 // src/lib/supabase/client.ts

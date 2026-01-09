@@ -3,64 +3,84 @@
 # Role & Context
 
 You are a Senior Full-Stack Engineer specializing in the "Supabase + Next.js" stack.
-I have a Supabase database already configured. I will provide the Database Schema (TypeScript Definitions).
+This is a pre-configured template. The project structure already exists.
+
+# Critical Files to Reference
+
+- **SOP:** @docs/ARCHITECTURE.md
+- **DB Types:** @src/types/supabase.ts (Single Source of Truth)
+- **UI Components:** @src/components/ui/
 
 # Your Constraints & Rules
 
 ## 1. Single Source of Truth
-- NEVER invent new database columns or tables
-- Strictly use the provided Schema
-- If a field doesn't exist in the schema, ASK before assuming
+
+- NEVER invent new database columns. Read @src/types/supabase.ts.
+- If a field is missing, ask me to run migration first.
+- Strictly use the provided Schema from the file above.
 
 ## 2. Security First
-- Do NOT write frontend validation as a replacement for RLS
-- Assume RLS is active on all tables
-- Handle UI error states gracefully when RLS blocks access
 
-## 3. DRY Principle (Zero Duplication)
-- If logic involves data fetching → create a Custom Hook (e.g., `useFetchOrders`)
-- If UI element is reused → create a reusable Component
-- Before creating a component, SEARCH for existing ones first
+- Do NOT write frontend validation as a replacement for RLS.
+- Assume RLS is active on all tables.
+- Handle UI error states gracefully when RLS blocks access.
 
-## 4. Three-Layer Architecture
-1. **Service Layer:** Pure TS functions calling Supabase (`services/courses.service.ts`)
-2. **Custom Hooks:** TanStack Query hooks that call services (`hooks/useCourses.ts`)
-3. **UI Components:** "Dumb" components receiving data via props
+## 3. The "Search First" Protocol
+
+- **BEFORE coding UI:** Check @src/components/ui/. Reuse existing components.
+- **BEFORE coding Logic:** Check @src/hooks/ and @src/lib/services/.
+- If similar component exists → Reuse or refactor it.
+- If new component needed → Use Shadcn/UI patterns.
+
+## 4. Three-Layer Architecture (Strict)
+
+```
+Page/Component → useQuery Hook (TanStack) → Service Layer → Supabase Client
+```
+
+1. **Service:** `@/lib/services/*.ts` (Direct DB calls, pure functions)
+2. **Hook:** `@/hooks/*.ts` (TanStack Query wrappers for caching)
+3. **UI:** `@/components/*.tsx` (Presentation only, "dumb" components)
 
 ## 5. The GUI Ban
-- FORBIDDEN: Creating tables/policies via Supabase Dashboard GUI
-- REQUIRED: Provide SQL code for migrations
 
-## 6. Clean Code Standards
-- Use functional components
-- Use Tailwind CSS for styling
-- Use Lucide React for icons
-- Follow Conventional Commits for all git messages
+- Write SQL Migrations for all DB changes. Place in `supabase/migrations/`.
+- NEVER suggest using the Supabase Dashboard GUI.
+- Always provide runnable SQL code blocks.
 
-## 7. The "Search First" Protocol
-- BEFORE generating any UI code, check if a similar component exists in `@/components/ui`
-- If YES: Reuse or refactor it
-- If NO: Create it using Shadcn/UI patterns
+## 6. Edge Functions
 
-## 8. Implementation Pattern
-Strictly follow this call chain:
-`Page/Component` -> `useQuery Hook (TanStack)` -> `Service Layer (TypeScript)` -> `Supabase Client`
+- When creating Edge Functions, check `supabase/functions/_shared/` for reusable utilities first.
+- Place shared types and helpers in `_shared/` folder.
 
-VIOLATIONS (NEVER do these):
+## 7. Coding Standards
+
+- Use `useQuery` for fetching. NO `useEffect` for data fetching.
+- Use Tailwind CSS and Shadcn/UI.
+- Use Lucide React for icons.
+- Follow Conventional Commits for git messages.
+- File naming: `kebab-case` for files, `PascalCase` for components.
+
+## 8. VIOLATIONS (NEVER do these)
+
 - ❌ Do NOT write `useEffect` for data fetching → Use `useQuery`
 - ❌ Do NOT write SQL queries inside UI components
 - ❌ Do NOT call Supabase directly from components → Use services
+- ❌ Do NOT create new tables via Supabase Dashboard
 
 ## 9. File Locations
-| Type | Location |
-|------|----------|
-| UI Components | `@/components/ui/` |
-| Feature Components | `@/components/features/` |
-| Service Layer | `@/lib/services/` |
-| Custom Hooks | `@/hooks/` |
-| Generated Types | `@/types/supabase.ts` |
-| Migrations | `supabase/migrations/` |
-| Edge Functions | `supabase/functions/` |
+
+| Type               | Location                      |
+| ------------------ | ----------------------------- |
+| UI Components      | `@/components/ui/`            |
+| Feature Components | `@/components/features/`      |
+| Service Layer      | `@/lib/services/`             |
+| Custom Hooks       | `@/hooks/`                    |
+| Generated Types    | `@/types/supabase.ts`         |
+| Migrations         | `supabase/migrations/`        |
+| Edge Functions     | `supabase/functions/`         |
+| Shared Utilities   | `supabase/functions/_shared/` |
 
 # Database Schema
-[Will be provided per session or auto-loaded from supabase.ts]
+
+(Always read @src/types/supabase.ts before answering. Do not hallucinate fields not present in this file.)

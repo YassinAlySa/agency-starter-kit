@@ -2,36 +2,39 @@
 
 > Professional Supabase + Next.js template for building scalable applications.
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
 ## Quick Start
 
 ```bash
 # 1. Clone this template
-git clone https://github.com/YOUR_ORG/agency-starter-kit.git my-project
+git clone https://github.com/YassinAlySa/agency-starter-kit.git my-project
 cd my-project
 
-# 2. Install dependencies
+# 2. Remove git history (fresh start for your project)
+rm -rf .git
+git init
+
+# 3. Install dependencies
 npm install
 
-# 3. Setup Supabase
-npx supabase init
+# 4. Setup Supabase
 npx supabase link --project-ref YOUR_PROJECT_ID
 
-# 4. Generate types
-npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/supabase.ts
+# 5. Generate types
+npm run typegen
 
-# 5. Start development
+# 6. Start development
 npm run dev
 ```
 
 ## 📁 Project Structure
 
 ```
-├── .cursorrules              # AI editor auto-rules
+├── .cursorrules              # AI editor auto-rules (Cursor/Windsurf)
 ├── .github/workflows/        # CI/CD pipelines
 ├── docs/                     # Documentation
-│   ├── ARCHITECTURE.md       # Full SOP
-│   ├── DATABASE_SCHEMA.md
-│   └── API_REFERENCE.md
+│   └── ARCHITECTURE.md       # Full SOP
 ├── src/
 │   ├── app/                  # Next.js App Router
 │   ├── components/
@@ -41,12 +44,12 @@ npm run dev
 │   ├── hooks/               # TanStack Query hooks
 │   ├── lib/
 │   │   ├── services/        # Supabase service layer
-│   │   ├── supabase/        # Client setup
-│   │   └── utils.ts
+│   │   └── supabase/        # Client setup
 │   └── types/               # TypeScript definitions
 ├── supabase/
 │   ├── migrations/          # SQL migrations
 │   ├── functions/           # Edge functions
+│   │   └── _shared/         # Shared utilities
 │   └── seed/                # Seed data
 └── tests/                   # Test suites
 ```
@@ -61,8 +64,8 @@ npm run dev
 - [ ] Update project name in `package.json`
 - [ ] Create Supabase project
 - [ ] Add environment variables to `.env.local`
-- [ ] Run initial migration
-- [ ] Generate TypeScript types
+- [ ] Run initial migration: `npx supabase db push`
+- [ ] Generate TypeScript types: `npm run typegen`
 
 ## 🛡️ Environment Variables
 
@@ -74,3 +77,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-key
 NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
 ```
+
+## 📜 Available Scripts
+
+| Command                 | Description                        |
+| ----------------------- | ---------------------------------- |
+| `npm run dev`           | Start development server           |
+| `npm run build`         | Build for production               |
+| `npm run typegen`       | Generate Supabase TypeScript types |
+| `npm run test`          | Run tests                          |
+| `npm run lint`          | Run ESLint                         |
+| `npm run docs:generate` | Generate API documentation         |
+
+## 🏗️ Architecture
+
+This template follows the **Three-Layer Architecture**:
+
+```
+UI Components → Custom Hooks (TanStack Query) → Service Layer → Supabase
+```
+
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for full documentation.
+
+## 📄 License
+
+MIT

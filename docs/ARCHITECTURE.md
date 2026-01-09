@@ -153,6 +153,587 @@ Create `PROJECT_MANIFEST.md` at root:
 |      |          |           |     |
 ```
 
+### 0.5 Comprehensive Implementation Plan ⭐ _Critical Deliverable_
+
+> **Purpose:** The master blueprint that guides the entire project from start to finish.
+> This is the GPS that ensures we never get lost.
+
+Create `docs/IMPLEMENTATION_PLAN.md`:
+
+```markdown
+# 📋 Implementation Plan: [PROJECT NAME]
+
+## Executive Summary
+
+**Project Name:** [Name]
+**Client:** [Client Name]
+**Start Date:** [Date]
+**Target Launch:** [Date]
+**Total Estimated Hours:** [X hours]
+
+---
+
+## 🎯 Project Scope
+
+### In Scope
+
+| Feature             | Description                   | Priority |
+| ------------------- | ----------------------------- | -------- |
+| User Authentication | Email/Password + Google OAuth | P0       |
+| [Feature 2]         |                               |          |
+
+### Out of Scope (Explicitly Excluded)
+
+| Feature    | Reason            | Future Phase? |
+| ---------- | ----------------- | ------------- |
+| Mobile App | Budget constraint | Phase 2       |
+|            |                   |               |
+
+---
+
+## 🏗️ Architecture Overview
+
+### Tech Stack
+
+| Layer        | Technology              | Justification          |
+| ------------ | ----------------------- | ---------------------- |
+| Frontend     | Next.js 14              | App Router, SSR        |
+| Backend      | Supabase Edge Functions | Serverless, PostgreSQL |
+| Database     | Supabase PostgreSQL     | RLS, Realtime          |
+| Hosting      | Vercel                  | Auto-deploy, Edge      |
+| AI Assistant | Google Antigravity      | Code generation        |
+
+### System Diagram
+
+[Mermaid diagram or image]
+
+---
+
+## 📅 Phase Breakdown
+
+### Phase 1: Foundation (Week 1-2)
+
+**Goal:** Project setup, database, authentication
+**Hours:** [X hours]
+**Deliverables:**
+
+- [ ] Project repository configured
+- [ ] Database schema created
+- [ ] Auth system working
+- [ ] RLS policies active
+
+### Phase 2: Core Features (Week 3-4)
+
+**Goal:** Main business logic and UI
+**Hours:** [X hours]
+**Deliverables:**
+
+- [ ] [Feature 1] complete
+- [ ] [Feature 2] complete
+
+### Phase 3: Polish & Testing (Week 5)
+
+**Goal:** Testing, bug fixes, optimization
+**Hours:** [X hours]
+**Deliverables:**
+
+- [ ] All tests passing
+- [ ] Performance optimized
+- [ ] Security audit complete
+
+### Phase 4: Deployment (Week 6)
+
+**Goal:** Production launch
+**Hours:** [X hours]
+**Deliverables:**
+
+- [ ] Staging tested
+- [ ] Production deployed
+- [ ] Client handover complete
+
+---
+
+## 🚨 Risk Assessment
+
+| Risk                    | Probability | Impact | Mitigation                    |
+| ----------------------- | ----------- | ------ | ----------------------------- |
+| Scope creep             | High        | High   | Strict change request process |
+| Third-party API failure | Medium      | High   | Fallback mechanisms           |
+|                         |             |        |                               |
+
+---
+
+## 📞 Communication Plan
+
+| Meeting           | Frequency | Attendees     | Purpose                |
+| ----------------- | --------- | ------------- | ---------------------- |
+| Progress Update   | Weekly    | Client + Lead | Status review          |
+| Tech Sync         | Daily     | Dev team      | Blockers               |
+| Checkpoint Review | Per phase | All           | Deliverable validation |
+
+---
+
+## ✅ Sign-Off
+
+| Role         | Name | Date | Signature |
+| ------------ | ---- | ---- | --------- |
+| Client       |      |      |           |
+| Project Lead |      |      |           |
+| Developer    |      |      |           |
+```
+
+---
+
+### 0.6 All-Inclusive Task List ⭐ _Critical Deliverable_
+
+> **Purpose:** Every single task needed to complete the project.
+> Even if 1000+ tasks, no problem. This is our execution checklist.
+> Nothing gets forgotten.
+
+Create `docs/TASK_LIST.md`:
+
+```markdown
+# 📝 Master Task List: [PROJECT NAME]
+
+> **Legend:**
+>
+> - [ ] Not started
+> - [/] In progress
+> - [x] Completed
+> - ⭕ Blocked
+> - ⚠️ Needs review
+
+---
+
+## Phase 0: Planning & Setup
+
+**Target:** [Date] | **Status:** [ ] Not Started
+
+### 0.1 Project Initialization
+
+- [ ] Clone agency-starter-kit template
+- [ ] Update package.json with project name
+- [ ] Create Supabase project
+- [ ] Configure environment variables (.env.local)
+- [ ] Verify local development works (`npm run dev`)
+
+### 0.2 Documentation
+
+- [ ] Create PRD.md
+- [ ] Create IMPLEMENTATION_PLAN.md
+- [ ] Create this TASK_LIST.md
+- [ ] Create KPI_DEFINITIONS.md
+- [ ] Draw ER diagram (Eraser.io)
+- [ ] Get client approval on scope
+
+### 0.3 Repository Setup
+
+- [ ] Initialize Git repository
+- [ ] Create GitHub repository
+- [ ] Configure branch protection rules
+- [ ] Set up CI/CD pipeline
+- [ ] Configure Vercel project
+
+---
+
+## Phase 1: Database & Authentication
+
+**Target:** [Date] | **Status:** [ ] Not Started
+
+### 1.1 Database Schema
+
+- [ ] Design users_profile table
+- [ ] Design [table_2] table
+- [ ] Design [table_3] table
+- [ ] Create migration: 00001_initial_schema.sql
+- [ ] Create migration: 00002\_[name].sql
+- [ ] Run migrations locally
+- [ ] Generate TypeScript types
+
+### 1.2 Row Level Security
+
+- [ ] Write RLS policy: users can view own data
+- [ ] Write RLS policy: users can update own data
+- [ ] Write RLS policy: admins can view all
+- [ ] Write RLS policy: [custom policy]
+- [ ] Test RLS with different user roles
+
+### 1.3 Database Triggers
+
+- [ ] Create trigger: on_auth_user_created
+- [ ] Create trigger: [custom trigger]
+- [ ] Test all triggers
+
+### 1.4 Authentication
+
+- [ ] Set up Supabase Auth
+- [ ] Create login page
+- [ ] Create signup page
+- [ ] Create password reset flow
+- [ ] Test auth flow end-to-end
+
+---
+
+## Phase 2: Core Features
+
+**Target:** [Date] | **Status:** [ ] Not Started
+
+### 2.1 Feature: [Feature Name]
+
+#### Service Layer
+
+- [ ] Create [feature].service.ts
+- [ ] Implement getAll() function
+- [ ] Implement getById() function
+- [ ] Implement create() function
+- [ ] Implement update() function
+- [ ] Implement delete() function
+
+#### Custom Hooks
+
+- [ ] Create use[Feature].ts hook
+- [ ] Implement useQuery for fetching
+- [ ] Implement useMutation for create
+- [ ] Implement useMutation for update
+- [ ] Implement useMutation for delete
+
+#### UI Components
+
+- [ ] Create [Feature]List.tsx
+- [ ] Create [Feature]Card.tsx
+- [ ] Create [Feature]Form.tsx
+- [ ] Create [Feature]Detail.tsx
+- [ ] Add loading states (Skeleton)
+- [ ] Add error states
+- [ ] Add empty states
+
+#### Pages
+
+- [ ] Create /[feature] list page
+- [ ] Create /[feature]/[id] detail page
+- [ ] Create /[feature]/new create page
+- [ ] Create /[feature]/[id]/edit edit page
+
+### 2.2 Feature: [Feature 2 Name]
+
+[Repeat same structure]
+
+---
+
+## Phase 3: Testing & QA
+
+**Target:** [Date] | **Status:** [ ] Not Started
+
+### 3.1 Unit Tests
+
+- [ ] Test utility functions
+- [ ] Test service layer functions
+- [ ] Test custom hooks
+- [ ] Achieve 80% coverage
+
+### 3.2 Integration Tests
+
+- [ ] Test API endpoints
+- [ ] Test database operations
+- [ ] Test authentication flow
+
+### 3.3 E2E Tests
+
+- [ ] Test user registration flow
+- [ ] Test login flow
+- [ ] Test [main feature] CRUD
+- [ ] Test [critical user journey]
+
+### 3.4 Manual QA
+
+- [ ] Test on Chrome
+- [ ] Test on Firefox
+- [ ] Test on Safari
+- [ ] Test on mobile (iOS)
+- [ ] Test on mobile (Android)
+- [ ] Verify responsive design
+
+### 3.5 Security Audit
+
+- [ ] Review all RLS policies
+- [ ] Check for exposed secrets
+- [ ] Test for SQL injection
+- [ ] Test for XSS
+- [ ] Run Lighthouse audit
+
+---
+
+## Phase 4: Deployment
+
+**Target:** [Date] | **Status:** [ ] Not Started
+
+### 4.1 Staging Deployment
+
+- [ ] Deploy to staging environment
+- [ ] Run full test suite on staging
+- [ ] Client UAT (User Acceptance Testing)
+- [ ] Fix UAT issues
+
+### 4.2 Production Preparation
+
+- [ ] Configure production environment variables
+- [ ] Set up production Supabase project
+- [ ] Configure custom domain
+- [ ] Set up Sentry error tracking
+- [ ] Configure backup strategy
+
+### 4.3 Go Live
+
+- [ ] Deploy to production
+- [ ] Verify production is working
+- [ ] Set up monitoring alerts
+- [ ] Create rollback plan
+
+### 4.4 Handover
+
+- [ ] Create user documentation
+- [ ] Create admin documentation
+- [ ] Training session with client
+- [ ] Transfer credentials securely
+- [ ] Final sign-off
+
+---
+
+## 📊 Progress Summary
+
+| Phase     | Total Tasks | Completed | Remaining | % Done |
+| --------- | ----------- | --------- | --------- | ------ |
+| Phase 0   |             |           |           | 0%     |
+| Phase 1   |             |           |           | 0%     |
+| Phase 2   |             |           |           | 0%     |
+| Phase 3   |             |           |           | 0%     |
+| Phase 4   |             |           |           | 0%     |
+| **TOTAL** |             |           |           | **0%** |
+
+---
+
+## 🔄 Task List Changelog
+
+| Date   | Change                    | By     |
+| ------ | ------------------------- | ------ |
+| [Date] | Initial task list created | [Name] |
+|        |                           |        |
+```
+
+---
+
+### 0.7 KPI Definitions & "Done" Criteria ⭐ _Critical Deliverable_
+
+> **Purpose:** Explicitly define what "DONE" means for every task and phase.
+> No ambiguity. No "almost done". Either it passes the criteria, or it's not done.
+
+Create `docs/KPI_DEFINITIONS.md`:
+
+````markdown
+# 📊 KPI Definitions & Done Criteria: [PROJECT NAME]
+
+> **Golden Rule:** A task is NOT done until ALL its criteria are met.
+> "Almost done" = Not done.
+
+---
+
+## 🎯 Phase-Level KPIs
+
+### Phase 0: Planning - DONE when:
+
+| Criteria                             | Verification Method       | Owner |
+| ------------------------------------ | ------------------------- | ----- |
+| PRD.md exists and approved by client | Client signature          | PM    |
+| IMPLEMENTATION_PLAN.md exists        | File exists in /docs      | Lead  |
+| TASK_LIST.md has all tasks listed    | File exists, no TBD items | Lead  |
+| KPI_DEFINITIONS.md complete          | This file exists          | Lead  |
+| ER diagram drawn and approved        | Image/Mermaid in docs     | Lead  |
+| Client signed off on scope           | Email/Document            | PM    |
+
+### Phase 1: Database - DONE when:
+
+| Criteria                    | Verification Method                         | Owner |
+| --------------------------- | ------------------------------------------- | ----- |
+| All tables created          | `npx supabase db diff` returns no changes   | Dev   |
+| All RLS policies active     | Manual testing with different roles         | Dev   |
+| TypeScript types generated  | `src/types/supabase.ts` up to date          | Dev   |
+| Auth flow works end-to-end  | Can register, login, logout, reset password | QA    |
+| No security vulnerabilities | Security checklist all green                | Lead  |
+
+### Phase 2: Features - DONE when:
+
+| Criteria                 | Verification Method                    | Owner |
+| ------------------------ | -------------------------------------- | ----- |
+| All CRUD operations work | Manual testing                         | QA    |
+| Loading states visible   | UI shows skeleton/spinner              | QA    |
+| Error states handled     | Try invalid inputs, get friendly error | QA    |
+| Empty states visible     | Delete all items, see empty message    | QA    |
+| Mobile responsive        | Test on phone                          | QA    |
+| No console errors        | Browser console clean                  | Dev   |
+
+### Phase 3: Testing - DONE when:
+
+| Criteria                    | Verification Method     | Owner |
+| --------------------------- | ----------------------- | ----- |
+| Unit test coverage ≥ 80%    | `npm run test:coverage` | Dev   |
+| All E2E tests pass          | `npm run e2e` green     | QA    |
+| Lighthouse score ≥ 90       | Lighthouse audit        | Dev   |
+| No critical security issues | Security audit report   | Lead  |
+| All browsers tested         | QA checklist signed     | QA    |
+
+### Phase 4: Deployment - DONE when:
+
+| Criteria                   | Verification Method            | Owner |
+| -------------------------- | ------------------------------ | ----- |
+| Staging approved by client | Client email approval          | PM    |
+| Production accessible      | Visit production URL           | All   |
+| Monitoring active          | Sentry dashboard shows project | Dev   |
+| Documentation complete     | All docs in /docs folder       | Lead  |
+| Client trained             | Training session completed     | PM    |
+| Final sign-off received    | Signed document                | PM    |
+
+---
+
+## 📋 Task-Level "Done" Definitions
+
+### Code Task is DONE when:
+
+- [ ] Code written and functions as expected
+- [ ] No TypeScript errors (`npm run type-check` passes)
+- [ ] No ESLint errors (`npm run lint` passes)
+- [ ] Unit tests written (if applicable)
+- [ ] Code reviewed (if team > 1)
+- [ ] Committed with Conventional Commits format
+
+### UI Component is DONE when:
+
+- [ ] Renders correctly on desktop
+- [ ] Renders correctly on mobile
+- [ ] Loading state implemented
+- [ ] Error state implemented
+- [ ] Empty state implemented (if applicable)
+- [ ] Accessible (keyboard navigation, proper labels)
+- [ ] No console errors
+
+### API Endpoint is DONE when:
+
+- [ ] Endpoint accessible
+- [ ] Returns correct data format
+- [ ] Handles errors gracefully
+- [ ] Authentication required (if protected)
+- [ ] RLS policies working
+- [ ] Documented in API reference
+
+### Database Migration is DONE when:
+
+- [ ] SQL file created in `supabase/migrations/`
+- [ ] Migration runs without errors locally
+- [ ] RLS enabled on new tables
+- [ ] Policies created for new tables
+- [ ] TypeScript types regenerated
+- [ ] Tested with sample data
+
+### Feature is DONE when:
+
+- [ ] All related tasks completed
+- [ ] Service layer complete
+- [ ] Custom hooks complete
+- [ ] UI components complete
+- [ ] Pages complete
+- [ ] Tests written and passing
+- [ ] Manual QA passed
+- [ ] Client approved (if major feature)
+
+---
+
+## 🚦 Status Definitions
+
+| Status         | Meaning                           | Can Move Forward? |
+| -------------- | --------------------------------- | ----------------- |
+| ⬜ Not Started | Work has not begun                | No                |
+| 🔵 In Progress | Actively being worked on          | No                |
+| 🟡 In Review   | Waiting for review/approval       | No                |
+| ⭕ Blocked     | Cannot proceed due to dependency  | No                |
+| 🟢 Done        | All criteria met                  | ✅ YES            |
+| 🔴 Failed      | Did not meet criteria, needs redo | No                |
+
+---
+
+## 📅 Checkpoint Reviews
+
+### When to Review:
+
+1. **End of each Phase** - Mandatory
+2. **Before major feature starts** - Recommended
+3. **When stuck/confused** - Compare current vs. plan
+4. **Weekly** - Progress check
+
+### Review Checklist:
+
+```markdown
+## Checkpoint Review: [Date]
+
+### What was planned for this phase:
+
+[Copy from IMPLEMENTATION_PLAN.md]
+
+### What was actually completed:
+
+[List completed tasks]
+
+### What is missing:
+
+[List incomplete tasks]
+
+### Reasons for deviation:
+
+[Explain any differences]
+
+### Action items:
+
+- [ ] [Item 1]
+- [ ] [Item 2]
+
+### Client informed:
+
+[ ] Yes [ ] No (explain why)
+```
+````
+
+---
+
+## 📈 Success Metrics
+
+### Project Health Indicators
+
+| Metric                  | Target | Current | Status |
+| ----------------------- | ------ | ------- | ------ |
+| Tasks completed on time | ≥ 90%  | -       | -      |
+| Bug escape rate         | < 5%   | -       | -      |
+| Client satisfaction     | ≥ 8/10 | -       | -      |
+| Scope change requests   | < 3    | -       | -      |
+| Code coverage           | ≥ 80%  | -       | -      |
+| Lighthouse score        | ≥ 90   | -       | -      |
+
+---
+
+## ✅ Final Delivery Checklist
+
+Before declaring project COMPLETE:
+
+- [ ] All Phase KPIs met (verified above)
+- [ ] All tasks in TASK_LIST.md marked [x]
+- [ ] IMPLEMENTATION_PLAN.md phases all completed
+- [ ] Client UAT passed
+- [ ] Production is live and stable
+- [ ] Documentation delivered
+- [ ] Training completed
+- [ ] Final invoice sent
+- [ ] Project retrospective done
+- [ ] Repository archived/transferred
+
+````
+
 ---
 
 ## Phase 1: Architecture & Database Design
@@ -186,7 +767,7 @@ Create `docs/architecture/SYSTEM_DESIGN.md`:
 ## Security Boundaries
 
 [Diagram showing trust zones]
-```
+````
 
 ### 1.2 Database Schema Design (CRITICAL)
 

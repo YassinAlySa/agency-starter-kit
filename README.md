@@ -1,6 +1,7 @@
 # 🚀 Agency Starter Kit
 
 > Professional Supabase + Next.js template for building scalable applications.
+> **Optimized for Google Antigravity IDE**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -31,7 +32,8 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-├── .cursorrules              # AI editor auto-rules (Cursor/Windsurf)
+├── .agent/workflows/         # Antigravity AI rules
+│   └── ai-rules.md          # AI enforcer instructions
 ├── .github/workflows/        # CI/CD pipelines
 ├── docs/                     # Documentation
 │   └── ARCHITECTURE.md       # Full SOP
@@ -57,7 +59,16 @@ npm run dev
 ## 🔗 Links
 
 - [Full SOP Documentation](./docs/ARCHITECTURE.md)
-- [AI Instructions](./.cursorrules)
+- [AI Instructions](./.agent/workflows/ai-rules.md)
+
+## 🤖 Antigravity Integration
+
+This template includes AI rules at `.agent/workflows/ai-rules.md` that:
+
+- Enforce the 3-layer architecture
+- Prevent code duplication
+- Ensure type safety from database to components
+- Guide AI to follow project conventions
 
 ## 📋 Pre-flight Checklist
 

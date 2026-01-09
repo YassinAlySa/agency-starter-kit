@@ -9,8 +9,8 @@ description: Complete Agency SOP - Professional workflow for building production
 
 > **📂 Companion Files:**
 >
-> - [AI_INSTRUCTIONS.md](./AI_INSTRUCTIONS.md) - Copy-paste prompt for AI sessions
-> - This file works with `.cursorrules` for Cursor IDE auto-injection
+> - [ai-rules.md](../.agent/workflows/ai-rules.md) - AI enforcer instructions for Antigravity IDE
+> - Place this in `.agent/workflows/` for automatic AI loading
 
 ---
 

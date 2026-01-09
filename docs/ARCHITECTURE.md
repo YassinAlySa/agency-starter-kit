@@ -6,6 +6,7 @@ description: Complete Agency SOP - Professional workflow for building production
 
 > **Stack:** Google Antigravity AI + Supabase + GitHub + Vercel  
 > **Target:** 100,000+ users scalability | Zero-downtime | Self-documenting codebase
+> **Security:** Military-grade | Zero tolerance for any vulnerability
 
 > **📂 Companion Files:**
 >
@@ -14,21 +15,107 @@ description: Complete Agency SOP - Professional workflow for building production
 
 ---
 
+## 🛡️ Security-First Manifesto
+
+> **"A paranoid developer is a good developer."** > **"Never trust, always verify."** > **"0.00000000000000001% risk = UNACCEPTABLE"**
+
+### The 10 Commandments of Secure Code
+
+| #   | Commandment                         | Meaning                                           |
+| --- | ----------------------------------- | ------------------------------------------------- |
+| 1   | **Trust Nothing**                   | Every input is a weapon until validated           |
+| 2   | **Defense in Depth**                | Multiple security layers, never rely on one       |
+| 3   | **Least Privilege**                 | Give minimum access required, nothing more        |
+| 4   | **Fail Secure**                     | Errors must NEVER reveal system information       |
+| 5   | **Encrypt Everything**              | At rest AND in transit, no plaintext ever         |
+| 6   | **Validate Input, Escape Output**   | Context-aware, "escape late" principle            |
+| 7   | **Log Everything (Except Secrets)** | Full audit trail, but never log PII/keys          |
+| 8   | **Session is Sacred**               | Rotate, expire, invalidate on logout              |
+| 9   | **Verify Continuously**             | Not just on login - Zero Trust Architecture       |
+| 10  | **Assume Breach**                   | Micro-segment, contain damage, limit blast radius |
+
+### Zero Trust Architecture Principles
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ZERO TRUST MODEL                              │
+├─────────────────────────────────────────────────────────────────┤
+│  ❌ OLD: "Trust but verify" (inside network = trusted)          │
+│  ✅ NEW: "Never trust, always verify" (everything = untrusted)  │
+├─────────────────────────────────────────────────────────────────┤
+│  1. VERIFY EXPLICITLY                                            │
+│     - Authenticate every request                                 │
+│     - Validate every parameter                                   │
+│     - Check authorization on every action                        │
+│                                                                  │
+│  2. LEAST PRIVILEGE ACCESS                                       │
+│     - Just-in-time access (not permanent)                       │
+│     - Just-enough access (not full admin)                       │
+│     - Time-limited tokens                                        │
+│                                                                  │
+│  3. ASSUME BREACH                                                │
+│     - Segment networks and applications                          │
+│     - Minimize blast radius                                      │
+│     - Encrypt all internal traffic                               │
+│     - Monitor everything                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Security at Every Layer
+
+```mermaid
+flowchart TB
+    subgraph Client["🌐 Client Layer"]
+        CSP["Content Security Policy"]
+        XSS["XSS Prevention"]
+        CSRF["CSRF Tokens"]
+        COOKIE["Secure Cookies"]
+    end
+
+    subgraph Network["🔒 Network Layer"]
+        HTTPS["HTTPS/TLS Only"]
+        HSTS["HSTS Headers"]
+        CORS["CORS Policy"]
+        WAF["WAF Protection"]
+    end
+
+    subgraph Server["⚙️ Server Layer"]
+        AUTH["JWT Verification"]
+        RATE["Rate Limiting"]
+        INPUT["Input Validation"]
+        OUTPUT["Output Escaping"]
+    end
+
+    subgraph Data["💾 Data Layer"]
+        RLS["Row Level Security"]
+        ENCRYPT["Encryption at Rest"]
+        PARAM["Parameterized Queries"]
+        AUDIT["Audit Logging"]
+    end
+
+    Client --> Network --> Server --> Data
+```
+
+---
+
 ## 📋 Table of Contents
 
-1. [Phase 0: Project Kickoff & Requirements](#phase-0-project-kickoff--requirements)
-2. [Phase 1: Architecture & Database Design](#phase-1-architecture--database-design)
-3. [Phase 2: Supabase Setup & Security](#phase-2-supabase-setup--security)
-4. [Phase 3: Frontend Foundation](#phase-3-frontend-foundation)
-5. [Phase 4: Backend Implementation](#phase-4-backend-implementation)
-6. [Phase 5: Integration & Alignment](#phase-5-integration--alignment)
-7. [Phase 6: Testing & Quality Assurance](#phase-6-testing--quality-assurance)
-8. [Phase 7: Deployment Pipeline](#phase-7-deployment-pipeline)
-9. [Phase 8: Monitoring & Maintenance](#phase-8-monitoring--maintenance)
-10. [Advanced Patterns](#advanced-patterns)
-11. [Documentation Standards](#documentation-standards)
-12. [Emergency Protocols](#emergency-protocols)
-13. [Quick Reference Commands](#quick-reference-commands)
+1. [Security-First Manifesto](#security-first-manifesto) ⭐ NEW
+2. [Phase 0: Project Kickoff & Requirements](#phase-0-project-kickoff--requirements)
+3. [Phase 1: Architecture & Database Design](#phase-1-architecture--database-design)
+4. [Phase 2: Supabase Setup & Security](#phase-2-supabase-setup--security)
+5. [Phase 3: Frontend Foundation](#phase-3-frontend-foundation)
+6. [Phase 4: Backend Implementation](#phase-4-backend-implementation)
+7. [Phase 5: Integration & Alignment](#phase-5-integration--alignment)
+8. [Phase 6: Testing & Quality Assurance](#phase-6-testing--quality-assurance)
+9. [Phase 7: Deployment Pipeline](#phase-7-deployment-pipeline)
+10. [Phase 8: Monitoring & Maintenance](#phase-8-monitoring--maintenance)
+11. [Phase 9: Penetration Testing & Security Audit](#phase-9-penetration-testing--security-audit) ⭐ NEW
+12. [Advanced Patterns](#advanced-patterns)
+13. [Security Deep Dives](#security-deep-dives) ⭐ NEW
+14. [Documentation Standards](#documentation-standards)
+15. [Emergency Protocols](#emergency-protocols)
+16. [Quick Reference Commands](#quick-reference-commands)
 
 ---
 
@@ -1295,6 +1382,168 @@ const supabase = createClient(
 - ❌ Missing vars → Build FAILS with clear error message
 - ✅ All vars present → Build succeeds, app runs safely
 
+### 3.1.2 Security Headers ⭐ _Critical for Defense_
+
+> **Every response must include security headers. No exceptions.**
+
+Create `next.config.js` with security headers:
+
+```javascript
+// next.config.js
+const securityHeaders = [
+  {
+    key: "X-Frame-Options",
+    value: "DENY", // Prevents clickjacking
+  },
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff", // Prevents MIME sniffing
+  },
+  {
+    key: "X-XSS-Protection",
+    value: "1; mode=block", // Legacy XSS protection
+  },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains; preload", // HSTS - forces HTTPS
+  },
+  {
+    key: "Content-Security-Policy",
+    value:
+      "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+  },
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+  {
+    key: "Permissions-Policy",
+    value: "geolocation=(), microphone=(), camera=()", // Disable dangerous APIs
+  },
+];
+
+module.exports = {
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
+  },
+};
+```
+
+**Header Checklist:**
+
+| Header                            | Prevents          | Risk if Missing |
+| --------------------------------- | ----------------- | --------------- |
+| `X-Frame-Options: DENY`           | Clickjacking      | 🔴 Critical     |
+| `X-Content-Type-Options: nosniff` | MIME confusion    | 🟡 High         |
+| `Strict-Transport-Security`       | Man-in-the-Middle | 🔴 Critical     |
+| `Content-Security-Policy`         | XSS, injection    | 🔴 Critical     |
+| `Referrer-Policy`                 | Info leakage      | 🟡 Medium       |
+| `Permissions-Policy`              | API abuse         | 🟡 Medium       |
+
+### 3.1.3 Cookie Security ⭐ _Session Hijacking Prevention_
+
+> **Cookies are the keys to your kingdom. Protect them.**
+
+```typescript
+// Secure cookie configuration for Supabase Auth
+const cookieOptions = {
+  httpOnly: true, // ⚠️ Prevents JavaScript access (blocks XSS theft)
+  secure: true, // ⚠️ HTTPS only (blocks network sniffing)
+  sameSite: "lax", // ⚠️ Prevents CSRF (strict for sensitive actions)
+  path: "/",
+  maxAge: 60 * 60 * 24 * 7, // 7 days
+};
+
+// In middleware or API routes
+response.cookies.set("session", token, cookieOptions);
+```
+
+**Cookie Security Checklist:**
+
+| Attribute  | Purpose          | Value                 |
+| ---------- | ---------------- | --------------------- |
+| `httpOnly` | Block JS access  | `true` ALWAYS         |
+| `secure`   | HTTPS only       | `true` in production  |
+| `sameSite` | CSRF protection  | `strict` or `lax`     |
+| `path`     | Scope limitation | `/` or specific path  |
+| `maxAge`   | Expiration       | As short as practical |
+
+**⚠️ FORBIDDEN:**
+
+```typescript
+// ❌ NEVER DO THIS
+document.cookie = "session=" + token; // Accessible to XSS
+response.cookies.set("session", token, { httpOnly: false }); // XSS vulnerable
+```
+
+### 3.1.4 Output Encoding ⭐ _Escape Late Principle_
+
+> **"Validate on input, ESCAPE on output."**
+> Context matters. Escape at the point of output, not storage.
+
+**Context-Aware Encoding:**
+
+| Output Context     | Encoding Method    | Example                |
+| ------------------ | ------------------ | ---------------------- |
+| **HTML Body**      | HTML entities      | `&lt;script&gt;`       |
+| **HTML Attribute** | Attribute encoding | `value="user&#39;s"`   |
+| **JavaScript**     | JSON + escape      | `JSON.stringify(data)` |
+| **URL Parameter**  | URI encoding       | `encodeURIComponent()` |
+| **CSS**            | CSS escape         | `CSS.escape()`         |
+
+**Implementation:**
+
+```typescript
+// src/lib/security/escape.ts
+import DOMPurify from "dompurify";
+
+export const SecurityUtils = {
+  // For displaying user text in HTML
+  escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  },
+
+  // For rich text (WYSIWYG editors)
+  sanitizeHtml(html: string): string {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ["b", "i", "em", "strong", "a", "p", "br"],
+      ALLOWED_ATTR: ["href", "target"],
+    });
+  },
+
+  // For URL parameters
+  encodeUrlParam(str: string): string {
+    return encodeURIComponent(str);
+  },
+
+  // For JavaScript context
+  escapeForJs(str: string): string {
+    return JSON.stringify(str);
+  },
+};
+```
+
+**Usage in Components:**
+
+```tsx
+// ✅ SAFE: React auto-escapes
+<div>{userInput}</div>
+
+// ✅ SAFE: Explicit encoding for URLs
+<a href={`/search?q=${encodeURIComponent(query)}`}>Search</a>
+
+// ⚠️ DANGEROUS: dangerouslySetInnerHTML - sanitize first!
+<div dangerouslySetInnerHTML={{ __html: SecurityUtils.sanitizeHtml(richText) }} />
+
+// ❌ NEVER: Unsanitized HTML
+<div dangerouslySetInnerHTML={{ __html: userInput }} />
+```
+
 ### 3.2 Folder Structure (NO DUPLICATION)
 
 ```
@@ -2530,6 +2779,386 @@ const handleSave = (data: ProductUpdate) => {
 
 ---
 
+## Phase 9: Penetration Testing & Security Audit ⭐ NEW
+
+> **This phase is MANDATORY before any production deployment.** > **No exceptions. No shortcuts. Zero tolerance.**
+
+### 9.1 Pre-Deployment Security Gate
+
+> **🚫 DEPLOYMENT BLOCKED until ALL items pass.**
+
+```markdown
+## Security Gate Checklist
+
+### Authentication & Authorization
+
+- [ ] All routes protected by middleware
+- [ ] RLS enabled on ALL tables
+- [ ] Admin routes require admin role check
+- [ ] Session expires appropriately
+- [ ] Password reset flow secure
+
+### Input/Output Security
+
+- [ ] All user inputs validated (Zod schemas)
+- [ ] All outputs escaped by context
+- [ ] File uploads validated (MIME + magic bytes)
+- [ ] No `eval()` or `Function()` usage
+
+### Headers & Transport
+
+- [ ] All security headers configured
+- [ ] HTTPS enforced (HSTS enabled)
+- [ ] Cookies are httpOnly + secure + sameSite
+
+### Database Security
+
+- [ ] No raw SQL with user input
+- [ ] Service role key NOT in client code
+- [ ] All queries parameterized
+
+### Dependencies
+
+- [ ] `npm audit` shows 0 critical/high
+- [ ] No known vulnerable packages
+
+### Secrets
+
+- [ ] No secrets in code or logs
+- [ ] Environment variables validated
+- [ ] .env files in .gitignore
+
+❌ ANY UNCHECKED = NO DEPLOY
+```
+
+### 9.2 OWASP Top 10 Checklist (2023)
+
+| #   | Vulnerability                 | Check                               | Status |
+| --- | ----------------------------- | ----------------------------------- | ------ |
+| A01 | **Broken Access Control**     | RLS policies tested per role        | ⬜     |
+| A02 | **Cryptographic Failures**    | HTTPS everywhere, passwords hashed  | ⬜     |
+| A03 | **Injection**                 | Parameterized queries, no eval()    | ⬜     |
+| A04 | **Insecure Design**           | Threat modeling done                | ⬜     |
+| A05 | **Security Misconfiguration** | Headers set, defaults changed       | ⬜     |
+| A06 | **Vulnerable Components**     | npm audit clean                     | ⬜     |
+| A07 | **Auth Failures**             | Strong passwords, MFA option        | ⬜     |
+| A08 | **Integrity Failures**        | Signed updates, SRI hashes          | ⬜     |
+| A09 | **Logging Failures**          | Audit logs, no secrets logged       | ⬜     |
+| A10 | **SSRF**                      | Internal IPs blocked, URL validated | ⬜     |
+
+### 9.3 Security Testing Procedures
+
+**Testing Types:**
+
+| Type                 | Method           | Tools                      | Frequency   |
+| -------------------- | ---------------- | -------------------------- | ----------- |
+| **Static Analysis**  | Scan source code | ESLint security, SonarQube | Every PR    |
+| **Dependency Scan**  | Check packages   | npm audit, Snyk            | Every build |
+| **Dynamic Testing**  | Test running app | OWASP ZAP, Burp Suite      | Pre-deploy  |
+| **Penetration Test** | Manual hacking   | Manual + scripts           | Monthly     |
+| **Fuzz Testing**     | Random inputs    | Custom fuzzer              | Quarterly   |
+
+**Manual Pen Test Checklist:**
+
+```markdown
+## Manual Security Tests
+
+### Authentication Bypass
+
+- [ ] Try accessing /dashboard without login
+- [ ] Try using expired tokens
+- [ ] Try SQL injection in login form
+- [ ] Try password enumeration
+
+### Authorization Bypass
+
+- [ ] Try accessing other users' data
+- [ ] Try accessing admin routes as user
+- [ ] Test RLS with different roles
+
+### Injection Attacks
+
+- [ ] XSS in all text inputs
+- [ ] SQL injection in search/filters
+- [ ] Command injection in file names
+- [ ] SSRF in URL inputs
+
+### File Upload
+
+- [ ] Upload .php/.js disguised as image
+- [ ] Upload oversized files
+- [ ] Upload with null bytes in name
+
+### Session Security
+
+- [ ] Session fixation test
+- [ ] Session doesn't persist after logout
+- [ ] CSRF tokens validated
+```
+
+### 9.4 Security Tools Integration
+
+```yaml
+# .github/workflows/security.yml
+name: Security Scan
+
+on: [push, pull_request]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Dependency vulnerabilities
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+      # Static code analysis
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v2
+
+      # Secret detection
+      - name: Detect secrets
+        uses: gitleaks/gitleaks-action@v2
+```
+
+**Tool Setup:**
+
+| Tool          | Purpose          | Setup                    |
+| ------------- | ---------------- | ------------------------ |
+| **npm audit** | Dependency scan  | `npm audit --production` |
+| **Snyk**      | Deep CVE scan    | `npx snyk test`          |
+| **OWASP ZAP** | Dynamic scan     | Docker or desktop        |
+| **SonarQube** | Static analysis  | GitHub Action            |
+| **Gitleaks**  | Secret detection | GitHub Action            |
+
+---
+
+## Security Deep Dives ⭐ NEW
+
+### SQL Injection Types & Prevention
+
+> **"One SQL query can destroy your entire database."**
+
+**Types of SQL Injection:**
+
+| Type             | Example Attack                      | Prevention            |
+| ---------------- | ----------------------------------- | --------------------- |
+| **Classic**      | `' OR '1'='1`                       | Parameterized queries |
+| **UNION**        | `' UNION SELECT * FROM users--`     | Parameterized queries |
+| **Blind**        | `' AND 1=1--` (no visible response) | Parameterized queries |
+| **Time-based**   | `' AND SLEEP(5)--`                  | Query timeouts        |
+| **Chained**      | `'; DELETE FROM users;--`           | No multi-statement    |
+| **Second-order** | Stored payload triggers later       | Escape on output      |
+
+**Supabase Protection:**
+
+```typescript
+// ✅ SAFE: Supabase uses parameterized queries
+const { data } = await supabase.from("users").select("*").eq("id", userInput); // Parameterized
+
+// ❌ DANGEROUS: Never use raw SQL with user input
+const { data } = await supabase.rpc("unsafe_query", {
+  sql: `SELECT * FROM users WHERE id = '${userInput}'`, // VULNERABLE!
+});
+```
+
+### SSRF (Server-Side Request Forgery) Prevention
+
+> **"When your server becomes a weapon against your own infrastructure."**
+
+**Attack Scenario:**
+
+```
+User inputs: http://localhost:8080/admin-api/delete-all
+Your server fetches this URL → Internal API executed!
+```
+
+**Prevention:**
+
+```typescript
+// src/lib/security/ssrf.ts
+
+const BLOCKED_HOSTS = [
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "169.254.169.254", // AWS metadata
+  "metadata.google.internal", // GCP metadata
+];
+
+const BLOCKED_IP_RANGES = [
+  /^10\./, // 10.x.x.x
+  /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16-31.x.x
+  /^192\.168\./, // 192.168.x.x
+  /^127\./, // Loopback
+  /^0\./, // Invalid
+];
+
+const BLOCKED_SCHEMES = ["file://", "ftp://", "gopher://", "dict://"];
+
+export function validateExternalUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+
+    // Check scheme
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+
+    // Check blocked hosts
+    if (BLOCKED_HOSTS.includes(url.hostname.toLowerCase())) {
+      throw new Error("Blocked host");
+    }
+
+    // Check private IP ranges
+    for (const pattern of BLOCKED_IP_RANGES) {
+      if (pattern.test(url.hostname)) {
+        throw new Error("Private IP blocked");
+      }
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
+
+### Command Injection Prevention
+
+> **"Never let user input reach the shell."**
+
+```typescript
+// ❌ EXTREMELY DANGEROUS
+import { exec } from "child_process";
+exec(`convert ${userFilename} output.png`); // VULNERABLE!
+// Attack: userFilename = "image.jpg; rm -rf /"
+
+// ❌ STILL DANGEROUS
+exec(`ping ${userIp}`);
+// Attack: userIp = "127.0.0.1; cat /etc/passwd"
+
+// ✅ SAFE: Use execFile with array arguments
+import { execFile } from "child_process";
+execFile("convert", [userFilename, "output.png"], callback);
+
+// ✅ SAFE: Validate input strictly
+const IP_REGEX = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+if (!IP_REGEX.test(userIp)) {
+  throw new Error("Invalid IP");
+}
+```
+
+**Rule: NEVER use these with user input:**
+
+- `exec()`, `execSync()`
+- `system()`, `shell_exec()` (if using PHP)
+- `os.system()`, `subprocess.call(shell=True)` (Python)
+- `eval()`, `Function()` (JavaScript)
+
+### Insecure Deserialization Prevention
+
+> **"Never deserialize untrusted data."**
+
+```typescript
+// ❌ DANGEROUS: eval-based deserialization
+const data = eval(userInput);
+
+// ❌ DANGEROUS in Python
+import pickle
+data = pickle.loads(user_bytes) // RCE possible!
+
+// ❌ DANGEROUS in PHP
+$data = unserialize($user_input); // Object injection!
+
+// ✅ SAFE: Use JSON (data only, no code)
+const data = JSON.parse(userInput);
+
+// ✅ SAFE: Validate schema after parsing
+const schema = z.object({
+  name: z.string(),
+  age: z.number(),
+});
+const validated = schema.parse(JSON.parse(userInput));
+```
+
+### File Upload Security (Complete)
+
+> **"Every file upload is a potential shell upload."**
+
+```typescript
+// src/lib/security/file-upload.ts
+
+// Magic bytes for common file types
+const MAGIC_BYTES: Record<string, number[]> = {
+  "image/jpeg": [0xff, 0xd8, 0xff],
+  "image/png": [0x89, 0x50, 0x4e, 0x47],
+  "image/gif": [0x47, 0x49, 0x46],
+  "application/pdf": [0x25, 0x50, 0x44, 0x46],
+};
+
+export async function validateFileUpload(file: File): Promise<boolean> {
+  // 1. Check file size (max 10MB)
+  const MAX_SIZE = 10 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    throw new Error("File too large");
+  }
+
+  // 2. Check extension
+  const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".pdf"];
+  const ext = "." + file.name.split(".").pop()?.toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    throw new Error("Invalid extension");
+  }
+
+  // 3. Check MIME type
+  if (!Object.keys(MAGIC_BYTES).includes(file.type)) {
+    throw new Error("Invalid MIME type");
+  }
+
+  // 4. Verify magic bytes
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const expectedBytes = MAGIC_BYTES[file.type];
+
+  for (let i = 0; i < expectedBytes.length; i++) {
+    if (bytes[i] !== expectedBytes[i]) {
+      throw new Error("File signature mismatch");
+    }
+  }
+
+  return true;
+}
+
+// 5. Rename to UUID before storage
+export function generateSafeFilename(originalName: string): string {
+  const ext = originalName.split(".").pop();
+  return `${crypto.randomUUID()}.${ext}`;
+}
+```
+
+### Directory Traversal Prevention
+
+```typescript
+// ❌ VULNERABLE
+const filePath = path.join("/uploads", userInput);
+// Attack: userInput = "../../../etc/passwd"
+
+// ✅ SAFE
+const safeName = path.basename(userInput); // Strips ../
+const filePath = path.join("/uploads", safeName);
+
+// Verify the path is still within uploads directory
+const resolvedPath = path.resolve(filePath);
+if (!resolvedPath.startsWith("/uploads/")) {
+  throw new Error("Path traversal detected");
+}
+```
+
+---
+
 ## Documentation Standards
 
 ### Auto-Generated Documentation with TypeDoc ⭐ _From Gemini_
@@ -2783,13 +3412,14 @@ Then copy the contents of that file into the prompt.
 
 ## Version History
 
-| Version | Date       | Changes                                                                                                                                                                                                                                                                    |
-| ------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-01-09 | Initial SOP release                                                                                                                                                                                                                                                        |
-| 1.1.0   | 2026-01-09 | Merged Gemini 3 Pro best practices (PRD, Triggers, Sentry, etc)                                                                                                                                                                                                            |
-| 1.2.0   | 2026-01-09 | Added Visual Planning, GUI Ban, Atomic Check, 3-Layer Architecture, Master Prompt                                                                                                                                                                                          |
-| 1.3.0   | 2026-01-09 | Created companion AI_INSTRUCTIONS.md (The Enforcer) for direct AI session use                                                                                                                                                                                              |
-| 1.4.0   | 2026-01-09 | **Major Update:** Added 14 critical sections - Env Validation, Seeding, Middleware, Storage, State Clarity, UI Components (Skeleton, ErrorMessage, EmptyState, ErrorBoundary), Advanced Patterns (Realtime, Pagination, Optimistic Updates), Mermaid diagrams, Updated TOC |
+| Version | Date       | Changes                                                                                                                                                                                                                                                                                   |
+| ------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-01-09 | Initial SOP release                                                                                                                                                                                                                                                                       |
+| 1.1.0   | 2026-01-09 | Merged Gemini 3 Pro best practices (PRD, Triggers, Sentry, etc)                                                                                                                                                                                                                           |
+| 1.2.0   | 2026-01-09 | Added Visual Planning, GUI Ban, Atomic Check, 3-Layer Architecture, Master Prompt                                                                                                                                                                                                         |
+| 1.3.0   | 2026-01-09 | Created companion AI_INSTRUCTIONS.md (The Enforcer) for direct AI session use                                                                                                                                                                                                             |
+| 1.4.0   | 2026-01-09 | **Major Update:** Added 14 critical sections - Env Validation, Seeding, Middleware, Storage, State Clarity, UI Components (Skeleton, ErrorMessage, EmptyState, ErrorBoundary), Advanced Patterns (Realtime, Pagination, Optimistic Updates), Mermaid diagrams, Updated TOC                |
+| 1.5.0   | 2026-01-09 | **🔐 ENTERPRISE SECURITY:** Security-First Manifesto (Zero Trust), Security Headers, Cookie Security, Output Encoding, Phase 9 Pen Testing (OWASP Top 10, Security Gate), Security Deep Dives (SQL Injection, SSRF, Command Injection, Deserialization, File Upload, Directory Traversal) |
 
 ---
 

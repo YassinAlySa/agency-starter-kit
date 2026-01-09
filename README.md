@@ -4,6 +4,19 @@
 > **Optimized for Google Antigravity IDE**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Security: Military-Grade](https://img.shields.io/badge/Security-Military%20Grade-green.svg)](./docs/ARCHITECTURE.md#security-first-manifesto)
+
+## 🛡️ Security-First Design
+
+This template implements **63 security controls** including:
+
+- ✅ 7 Security Headers (HSTS, CSP, X-Frame-Options, etc.)
+- ✅ OWASP Top 10 protections
+- ✅ Input validation (Zod) & Output encoding
+- ✅ SSRF, XSS, SQL Injection prevention
+- ✅ File upload security (magic bytes verification)
+- ✅ ESLint security plugins
+- ✅ npm audit in CI/CD
 
 ## Quick Start
 

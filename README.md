@@ -1,0 +1,76 @@
+# 🚀 Agency Starter Kit
+
+> Professional Supabase + Next.js template for building scalable applications.
+
+## Quick Start
+
+```bash
+# 1. Clone this template
+git clone https://github.com/YOUR_ORG/agency-starter-kit.git my-project
+cd my-project
+
+# 2. Install dependencies
+npm install
+
+# 3. Setup Supabase
+npx supabase init
+npx supabase link --project-ref YOUR_PROJECT_ID
+
+# 4. Generate types
+npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/supabase.ts
+
+# 5. Start development
+npm run dev
+```
+
+## 📁 Project Structure
+
+```
+├── .cursorrules              # AI editor auto-rules
+├── .github/workflows/        # CI/CD pipelines
+├── docs/                     # Documentation
+│   ├── ARCHITECTURE.md       # Full SOP
+│   ├── DATABASE_SCHEMA.md
+│   └── API_REFERENCE.md
+├── src/
+│   ├── app/                  # Next.js App Router
+│   ├── components/
+│   │   ├── ui/              # Shadcn components
+│   │   ├── forms/           # Form components
+│   │   └── features/        # Feature-specific
+│   ├── hooks/               # TanStack Query hooks
+│   ├── lib/
+│   │   ├── services/        # Supabase service layer
+│   │   ├── supabase/        # Client setup
+│   │   └── utils.ts
+│   └── types/               # TypeScript definitions
+├── supabase/
+│   ├── migrations/          # SQL migrations
+│   ├── functions/           # Edge functions
+│   └── seed/                # Seed data
+└── tests/                   # Test suites
+```
+
+## 🔗 Links
+
+- [Full SOP Documentation](./docs/ARCHITECTURE.md)
+- [AI Instructions](./.cursorrules)
+
+## 📋 Pre-flight Checklist
+
+- [ ] Update project name in `package.json`
+- [ ] Create Supabase project
+- [ ] Add environment variables to `.env.local`
+- [ ] Run initial migration
+- [ ] Generate TypeScript types
+
+## 🛡️ Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-key
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
+```
